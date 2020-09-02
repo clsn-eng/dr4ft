@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const {shuffle, truncate} = require("lodash");
+const {shuffle, truncate, zip, flatten} = require("lodash");
 const uuid = require("uuid");
 const jsonfile = require("jsonfile");
 const Bot = require("./bot");
@@ -584,15 +584,17 @@ module.exports = class Game extends Room {
       Object.assign(this, { addBots, useTimer, timerLength, shufflePlayers });
       this.renew();
 
-      if (this.shouldAddBots()) {
-        while (this.players.length < this.seats) {
-          this.players.push(new Bot());
-          this.bots++;
-        }
-      }
-
       if (shufflePlayers) {
         this.players = shuffle(this.players);
+      }
+
+      if (this.shouldAddBots()) {
+        this.players = flatten(
+          zip(
+            this.players,
+            Array(this.seats - this.players.length).fill(new Bot())
+          )
+        ).filter((element) => element);
       }
 
       this.createPool();
